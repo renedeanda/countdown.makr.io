@@ -358,15 +358,6 @@ export default function Countdown() {
                   <DayPicker
                     mode="single"
                     selected={new Date(newEvent.date)}
-                    onSelect={(date) => setNewEvent(prev => ({ ...prev, date }))}
-                    modifiers={{ disabled: { before: new Date() } }}
-                    className="rounded-lg"
-                  />
-                </div>
-                <div className="flex justify-center">
-                  <DayPicker
-                    mode="single"
-                    selected={new Date(newEvent.date)}
                     onSelect={(date) => setNewEvent((prev) => ({ ...prev, date }))}
                     modifiers={{ disabled: { before: new Date() } }}
                     className={`rounded-lg transition-all duration-300 ${
@@ -374,7 +365,7 @@ export default function Countdown() {
                     }`}
                     modifiersClassNames={{
                       selected: `bg-blue-500 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
-                      today: `bg-green-500 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
+                      today: `bg-purple-400 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
                       disabled: `bg-gray-600 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`,
                     }}
                   />
