@@ -361,7 +361,7 @@ export default function Countdown() {
                     onSelect={(date) => setNewEvent((prev) => ({ ...prev, date }))}
                     modifiers={{ disabled: { before: new Date() } }}
                     className={`rounded-lg transition-all duration-300 ${
-                      isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800'
+                      isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
                     }`}
                     modifiersClassNames={{
                       selected: `bg-blue-500 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
