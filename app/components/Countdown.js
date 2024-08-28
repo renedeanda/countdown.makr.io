@@ -254,12 +254,14 @@ export default function Countdown() {
               Created with 🧡 + 🤖 by René DeAnda
             </a>
           </div>
-          <button
-            onClick={() => openModal()}
-            className="w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            Add New Event
-          </button>
+          {events.length > 0 && (
+            <button
+              onClick={() => openModal()}
+              className="w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Add New Event
+            </button>
+          )}
         </div>
         {events.length === 0 ? (
           <div className="text-center py-20">
