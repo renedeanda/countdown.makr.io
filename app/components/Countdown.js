@@ -354,12 +354,15 @@ export default function Countdown() {
                 <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Event Date
                 </label>
-                <DayPicker
-                  mode="single"
-                  selected={new Date(newEvent.date)}
-                  onSelect={(date) => setNewEvent(prev => ({ ...prev, date }))}
-                  modifiers={{ disabled: { before: new Date() } }}
-                />
+                <div className="flex justify-center">
+                  <DayPicker
+                    mode="single"
+                    selected={new Date(newEvent.date)}
+                    onSelect={(date) => setNewEvent(prev => ({ ...prev, date }))}
+                    modifiers={{ disabled: { before: new Date() } }}
+                    className="rounded-lg"
+                  />
+                </div>
               </div>
               <div>
                 <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
