@@ -243,13 +243,17 @@ export default function Countdown() {
       </header>
       {isCelebrating && <Confetti />}
       <main className="container mx-auto p-4">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
-          <button
-            onClick={sortEvents}
-            className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-          >
-            Sort by Date ({sortOrder === 'ascending' ? 'Earliest First' : 'Latest First'})
-          </button>
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="text-center mt-4 mb-4">
+            <a 
+              href="https://renedeanda.com?utm_source=countdown.makr.io" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-gray-700 dark:text-gray-300 hover:underline"
+            >
+              Created with 🧡 + 🤖 by René DeAnda
+            </a>
+          </div>
           <button
             onClick={() => openModal()}
             className="w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
