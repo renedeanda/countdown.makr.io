@@ -1,4 +1,3 @@
-
 {
   "name": "event-countdown",
   "version": "0.1.0",
@@ -10,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@headlessui/react": "^2.1.3",
     "autoprefixer": "10.4.14",
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
@@ -22,6 +22,7 @@
     "react": "18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-confetti": "^6.1.0",
+    "react-datepicker": "^7.3.0",
     "react-dom": "18.2.0",
     "react-ga4": "^2.1.0",
     "react-icons": "^4.10.1",
@@ -29,6 +30,14 @@
   },
   "description": "Countdown to your special events and milestones. Track birthdays, holidays, weddings, and more!",
   "author": "Your Name",
-  "keywords": ["countdown", "events", "milestones", "birthday", "wedding", "holiday", "graduation"],
+  "keywords": [
+    "countdown",
+    "events",
+    "milestones",
+    "birthday",
+    "wedding",
+    "holiday",
+    "graduation"
+  ],
   "homepage": "https://countdown.makr.io"
 }

@@ -1,16 +1,16 @@
-
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, isToday } from 'date-fns';
-import { FaBaby, FaBirthdayCake, FaGift, FaHeart, FaGraduationCap, FaPlane, FaRing, FaHome, FaCar, FaBriefcase, FaDumbbell, FaBook, FaMusic, FaTheaterMasks, FaSeedling, FaPaw, FaUserMd, FaGlassCheers, FaRunning, FaLaptopCode, FaPizzaSlice, FaPalette, FaGamepad, FaMoon, FaSun, FaSpaceShuttle, FaFootballBall, FaGuitar, FaMicrophone, FaChalkboardTeacher, FaCameraRetro } from 'react-icons/fa';
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, isToday, isPast } from 'date-fns';
+import { FaBaby, FaBirthdayCake, FaGift, FaHeart, FaGraduationCap, FaPlane, FaRing, FaHome, FaCar, FaBriefcase, FaDumbbell, FaBook, FaMusic, FaTheaterMasks, FaSeedling, FaPaw, FaUserMd, FaGlassCheers, FaRunning, FaLaptopCode, FaPizzaSlice, FaPalette, FaGamepad, FaMoon, FaSun, FaSpaceShuttle, FaFootballBall, FaGuitar, FaMicrophone, FaChalkboardTeacher, FaCameraRetro, FaEdit, FaTrash, FaShare } from 'react-icons/fa';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import ReactGA from 'react-ga4';
 import Confetti from 'react-confetti';
-import Header from './Header';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 ReactGA.initialize('YOUR_GA_MEASUREMENT_ID');
 
@@ -50,13 +50,23 @@ const icons = {
 
 const eventTypes = Object.keys(icons);
 
+const gradients = [
+  'from-blue-400 to-purple-500',
+  'from-yellow-400 to-orange-500',
+  'from-green-400 to-cyan-500',
+  'from-pink-400 to-red-500',
+  'from-indigo-400 to-blue-500'
+];
+
 export default function Countdown() {
   const [events, setEvents] = useState([]);
-  const [newEvent, setNewEvent] = useState({ name: '', date: '', type: 'baby' });
+  const [newEvent, setNewEvent] = useState({ name: '', date: new Date(), type: 'baby' });
   const [sortOrder, setSortOrder] = useState('ascending');
   const [holidays, setHolidays] = useState([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   useEffect(() => {
     const savedEvents = localStorage.getItem('events');
@@ -80,26 +90,42 @@ export default function Countdown() {
     }
   };
 
-  const addEvent = useCallback(() => {
+  const addOrUpdateEvent = useCallback(() => {
     if (newEvent.name && newEvent.date) {
-      setEvents(prevEvents => [...prevEvents, { ...newEvent, id: Date.now().toString() }]);
-      setNewEvent({ name: '', date: '', type: 'baby' });
+      if (editingEvent) {
+        setEvents(prevEvents => prevEvents.map(event =>
+          event.id === editingEvent.id ? { ...newEvent, id: event.id } : event
+        ));
+      } else {
+        setEvents(prevEvents => [...prevEvents, { ...newEvent, id: Date.now().toString() }]);
+      }
+      setNewEvent({ name: '', date: new Date(), type: 'baby' });
+      setEditingEvent(null);
+      setIsModalOpen(false);
       ReactGA.event({
         category: 'User',
-        action: 'Added Event',
+        action: editingEvent ? 'Updated Event' : 'Added Event',
         label: newEvent.type
       });
     }
-  }, [newEvent]);
+  }, [newEvent, editingEvent]);
 
-  const shareImage = useCallback(async () => {
-    const element = document.getElementById('countdown-share');
+  const deleteEvent = useCallback((id) => {
+    setEvents(prevEvents => prevEvents.filter(event => event.id !== id));
+    ReactGA.event({
+      category: 'User',
+      action: 'Deleted Event'
+    });
+  }, []);
+
+  const shareEvent = useCallback(async (event) => {
+    const element = document.getElementById(`event-${event.id}`);
     if (element) {
       const blob = await toPng(element);
-      saveAs(blob, 'countdown.png');
+      saveAs(blob, `${event.name}-countdown.png`);
       ReactGA.event({
         category: 'User',
-        action: 'Shared Image'
+        action: 'Shared Event'
       });
     }
   }, []);
@@ -131,7 +157,7 @@ export default function Countdown() {
     const hours = differenceInHours(target, now) % 24;
     const minutes = differenceInMinutes(target, now) % 60;
     const seconds = differenceInSeconds(target, now) % 60;
-    return { days, hours, minutes, seconds };
+    return { days: Math.max(days, 0), hours: Math.max(hours, 0), minutes: Math.max(minutes, 0), seconds: Math.max(seconds, 0) };
   }, []);
 
   const toggleTheme = () => {
@@ -144,108 +170,202 @@ export default function Countdown() {
     setTimeout(() => setIsCelebrating(false), 5000);
   };
 
-  return (
-    <div className={`min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300`}>
-      <Header toggleTheme={toggleTheme} isDarkMode={isDarkMode} onCelebrate={celebrate} />
-      {isCelebrating && <Confetti />}
-      <div className="container mx-auto p-4">
-        <button onClick={sortEvents} className="mb-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out transform hover:scale-105">
-          Sort by Date ({sortOrder === 'ascending' ? 'Earliest First' : 'Latest First'})
-        </button>
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="events">
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((event, index) => {
-                  const IconComponent = icons[event.type];
-                  const timeLeft = calculateTimeLeft(event.date);
-                  const isEventToday = isToday(new Date(event.date));
-                  return (
-                    <Draggable key={event.id} draggableId={event.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 transition-transform duration-300 ease-in-out transform hover:scale-105"
-                        >
-                          {isEventToday && <Confetti />}
-                          <div className="flex items-center justify-center mb-4">
-                            <IconComponent className="text-5xl text-pink-500 dark:text-pink-400" />
-                          </div>
-                          <h2 className="text-xl font-semibold text-center mb-4 text-gray-800 dark:text-white">{event.name}</h2>
-                          <div className="grid grid-cols-2 gap-2 text-center">
-                            <div className="bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg p-2">
-                              <span className="text-2xl font-bold text-white">{timeLeft.days}</span>
-                              <p className="text-white text-sm">Days</p>
-                            </div>
-                            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg p-2">
-                              <span className="text-2xl font-bold text-white">{timeLeft.hours}</span>
-                              <p className="text-white text-sm">Hours</p>
-                            </div>
-                            <div className="bg-gradient-to-r from-indigo-500 to-blue-500 rounded-lg p-2">
-                              <span className="text-2xl font-bold text-white">{timeLeft.minutes}</span>
-                              <p className="text-white text-sm">Minutes</p>
-                            </div>
-                            <div className="bg-gradient-to-r from-blue-500 to-teal-500 rounded-lg p-2">
-                              <span className="text-2xl font-bold text-white">{timeLeft.seconds}</span>
-                              <p className="text-white text-sm">Seconds</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        <button onClick={shareImage} className="mt-8 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full transition duration-300 ease-in-out transform hover:scale-105 text-lg font-semibold">
-          Share as Image
-        </button>
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full mx-auto">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Event</h3>
-          <input
-            type="text"
-            placeholder="Event Name"
-            value={newEvent.name}
-            onChange={(e) => setNewEvent(prev => ({ ...prev, name: e.target.value }))}
-            className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
-          <input
-            type="date"
-            value={newEvent.date}
-            onChange={(e) => setNewEvent(prev => ({ ...prev, date: e.target.value }))}
-            className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
-          <select
-            value={newEvent.type}
-            onChange={(e) => setNewEvent(prev => ({ ...prev, type: e.target.value }))}
-            className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
-          >
-            {eventTypes.map(type => (
-              <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-            ))}
-          </select>
-          <button onClick={ad# Continuing from where we left off...
+  const openModal = (event = null) => {
+    if (event) {
+      setEditingEvent(event);
+      setNewEvent(event);
+    } else {
+      setNewEvent({ name: '', date: new Date(), type: 'baby' });
+      setEditingEvent(null);
+    }
+    setIsModalOpen(true);
+  };
 
-dEvent} className="w-full bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out transform hover:scale-105">
-            Add Event
+  return (
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-100'} transition-colors duration-300`}>
+      <header className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 shadow-lg">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-white">Event Countdown</h1>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={celebrate}
+              className="bg-white text-purple-600 font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 hover:bg-purple-100"
+            >
+              Celebrate!
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="text-white hover:text-yellow-300 transition duration-300 ease-in-out"
+            >
+              {isDarkMode ? <FaSun size={24} /> : <FaMoon size={24} />}
+            </button>
+          </div>
+        </div>
+      </header>
+      {isCelebrating && <Confetti />}
+      <main className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-8">
+          <button
+            onClick={sortEvents}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+          >
+            Sort by Date ({sortOrder === 'ascending' ? 'Earliest First' : 'Latest First'})
+          </button>
+          <button
+            onClick={() => openModal()}
+            className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            Add New Event
           </button>
         </div>
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full mx-auto">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Upcoming Holidays</h3>
-          <ul className="space-y-2">
-            {holidays.slice(0, 5).map(holiday => (
-              <li key={holiday.date} className="text-gray-700 dark:text-gray-300">
-                <span className="font-semibold text-pink-500 dark:text-pink-400">{holiday.name}</span>: {holiday.date}
-              </li>
-            ))}
-          </ul>
+        {events.length === 0 ? (
+          <div className="text-center py-20">
+            <FaGift className="text-6xl text-gray-400 mb-4 mx-auto" />
+            <h2 className="text-2xl font-bold text-gray-600 mb-2">No events yet</h2>
+            <p className="text-gray-500 mb-8">Add your first event to start counting down!</p>
+            <button
+              onClick={() => openModal()}
+              className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Add Your First Event
+            </button>
+          </div>
+        ) : (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="events">
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((event, index) => {
+                    const IconComponent = icons[event.type];
+                    const timeLeft = calculateTimeLeft(event.date);
+                    const isEventToday = isToday(new Date(event.date));
+                    const isPastEvent = isPast(new Date(event.date));
+                    const gradientClass = gradients[index % gradients.length];
+                    return (
+                      <Draggable key={event.id} draggableId={event.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            id={`event-${event.id}`}
+                            className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 transition-transform duration-300 ease-in-out transform hover:scale-105 ${isEventToday ? 'ring-4 ring-yellow-400' : ''}`}
+                          >
+                            {isEventToday && <Confetti />}
+                            <div className="flex flex-col items-center mb-4">
+                              <IconComponent className={`text-7xl mb-2 bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`} />
+                              <h2 className="text-xl font-semibold text-center mb-2 text-gray-800 dark:text-white">{event.name}</h2>
+                            </div>
+                            {isPastEvent ? (
+                              <p className="text-center text-4xl font-bold text-gray-600 dark:text-gray-400">Event Passed</p>
+                            ) : (
+                              <>
+                                <p className={`text-center text-8xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
+                                  {timeLeft.days}
+                                </p>
+                                <p className="text-center text-xl text-gray-600 dark:text-gray-400 mt-2">Days Left</p>
+                                <div className="mt-4 text-center text-gray-600 dark:text-gray-400 text-lg">
+                                  {`${timeLeft.hours.toString().padStart(2, '0')}:${timeLeft.minutes.toString().padStart(2, '0')}:${timeLeft.seconds.toString().padStart(2, '0')}`}
+                                </div>
+                              </>
+                            )}
+                            <div className="mt-4 flex justify-center space-x-2">
+                              <button onClick={() => openModal(event)} className="text-blue-500 hover:text-blue-600">
+                                <FaEdit size={20} />
+                              </button>
+                              <button onClick={() => deleteEvent(event.id)} className="text-red-500 hover:text-red-600">
+                                <FaTrash size={20} />
+                              </button>
+                              <button onClick={() => shareEvent(event)} className="text-green-500 hover:text-green-600">
+                                <FaShare size={20} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        )}
+      </main>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              {editingEvent ? 'Edit Event' : 'Add New Event'}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="eventName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Event Name
+                </label>
+                <input
+                  type="text"
+                  id="eventName"
+                  value={newEvent.name}
+                  onChange={(e) => setNewEvent(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter event name"
+                />
+              </div>
+              <div>
+                <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Event Date
+                </label>
+                <DatePicker
+                  id="eventDate"
+                  selected={new Date(newEvent.date)}
+                  onChange={(date) => setNewEvent(prev => ({ ...prev, date }))}
+                  className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  dateFormat="MMMM d, yyyy"
+                  popperClassName="react-datepicker-popper"
+                  popperModifiers={[
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 8]
+                      }
+                    }
+                  ]}
+                />
+              </div>
+              <div>
+                <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Event Type
+                </label>
+                <select
+                  id="eventType"
+                  value={newEvent.type}
+                  onChange={(e) => setNewEvent(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                >
+                  {eventTypes.map(type => (
+                    <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addOrUpdateEvent}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {editingEvent ? 'Update Event' : 'Add Event'}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
