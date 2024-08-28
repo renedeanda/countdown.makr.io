@@ -36,10 +36,17 @@ body {
   width: 100%;
 }
 
-.react-datepicker__input-container input {
+.react-datepicker__input-container {
   width: 100%;
 }
 
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+}
+
 .react-datepicker-popper {
-  z-index: 9999 !important;
+  z-index: 10;
 }

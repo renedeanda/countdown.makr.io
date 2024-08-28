@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, isToday, isPast } from 'date-fns';
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, isToday, isPast, startOfDay } from 'date-fns';
 import { FaBaby, FaBirthdayCake, FaGift, FaHeart, FaGraduationCap, FaPlane, FaRing, FaHome, FaCar, FaBriefcase, FaDumbbell, FaBook, FaMusic, FaTheaterMasks, FaSeedling, FaPaw, FaUserMd, FaGlassCheers, FaRunning, FaLaptopCode, FaPizzaSlice, FaPalette, FaGamepad, FaMoon, FaSun, FaSpaceShuttle, FaFootballBall, FaGuitar, FaMicrophone, FaChalkboardTeacher, FaCameraRetro, FaEdit, FaTrash, FaShare } from 'react-icons/fa';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
@@ -93,7 +93,7 @@ export default function Countdown() {
   const addOrUpdateEvent = useCallback(() => {
     if (newEvent.name && newEvent.date) {
       if (editingEvent) {
-        setEvents(prevEvents => prevEvents.map(event =>
+        setEvents(prevEvents => prevEvents.map(event => 
           event.id === editingEvent.id ? { ...newEvent, id: event.id } : event
         ));
       } else {
@@ -121,14 +121,53 @@ export default function Countdown() {
   const shareEvent = useCallback(async (event) => {
     const element = document.getElementById(`event-${event.id}`);
     if (element) {
-      const blob = await toPng(element);
-      saveAs(blob, `${event.name}-countdown.png`);
+      try {
+        // Increase the scale for better resolution
+        const scale = 2;
+        const dataUrl = await toPng(element, {
+          backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+          pixelRatio: scale
+        });
+  
+        const img = new Image();
+        img.src = dataUrl;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d', { alpha: true });
+  
+          // Set canvas size to scaled dimensions
+          canvas.width = img.width;
+          canvas.height = img.height + 60; // Add more space for text
+  
+          // Draw background
+          ctx.fillStyle = isDarkMode ? '#1F2937' : '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+          // Draw the image
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+  
+          // Improve font rendering
+          ctx.font = '20px Arial';
+          ctx.fillStyle = isDarkMode ? '#FFFFFF' : '#000000';
+          ctx.textAlign = 'center';
+          ctx.fillText('Made with countdown.makr.io 🎉', canvas.width / 2, canvas.height - 20);
+  
+          // Save the image with better quality
+          canvas.toBlob((blob) => {
+            saveAs(blob, `${event.name}-countdown.png`, { quality: 0.92 });
+          }, 'image/png');
+        };
+      } catch (error) {
+        console.error('Error generating image:', error);
+      }
+  
+      // Log the sharing event
       ReactGA.event({
         category: 'User',
         action: 'Shared Event'
       });
     }
-  }, []);
+  }, [isDarkMode]);
 
   const sortEvents = useCallback(() => {
     setEvents(prevEvents => {
@@ -205,13 +244,13 @@ export default function Countdown() {
       {isCelebrating && <Confetti />}
       <main className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-8">
-          <button
+          <button 
             onClick={sortEvents}
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
           >
             Sort by Date ({sortOrder === 'ascending' ? 'Earliest First' : 'Latest First'})
           </button>
-          <button
+          <button 
             onClick={() => openModal()}
             className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
@@ -223,7 +262,7 @@ export default function Countdown() {
             <FaGift className="text-6xl text-gray-400 mb-4 mx-auto" />
             <h2 className="text-2xl font-bold text-gray-600 mb-2">No events yet</h2>
             <p className="text-gray-500 mb-8">Add your first event to start counting down!</p>
-            <button
+            <button 
               onClick={() => openModal()}
               className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             >
@@ -244,39 +283,38 @@ export default function Countdown() {
                     return (
                       <Draggable key={event.id} draggableId={event.id} index={index}>
                         {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            id={`event-${event.id}`}
-                            className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 transition-transform duration-300 ease-in-out transform hover:scale-105 ${isEventToday ? 'ring-4 ring-yellow-400' : ''}`}
-                          >
-                            {isEventToday && <Confetti />}
-                            <div className="flex flex-col items-center mb-4">
-                              <IconComponent className={`text-7xl mb-2 bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`} />
-                              <h2 className="text-xl font-semibold text-center mb-2 text-gray-800 dark:text-white">{event.name}</h2>
+                          <div className="flex flex-col">
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              id={`event-${event.id}`}
+                              className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 transition-transform duration-300 ease-in-out transform hover:scale-105 ${isEventToday ? 'ring-4 ring-yellow-400' : ''}`}
+                            >
+                              {isEventToday && <Confetti />}
+                              <div className="flex flex-col items-center mb-4">
+                                {IconComponent && <IconComponent className={`text-5xl mb-2 bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`} />}
+                                <h2 className="text-xl font-semibold text-center mb-2 text-gray-800 dark:text-white">{event.name}</h2>
+                              </div>
+                              {isPastEvent ? (
+                                <p className="text-center text-4xl font-bold text-gray-600 dark:text-gray-400">Event Passed</p>
+                              ) : (
+                                <>
+                                  <p className={`text-center text-8xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
+                                    {timeLeft.days}
+                                  </p>
+                                  <p className="text-center text-xl text-gray-600 dark:text-gray-400 mt-2">Days Left</p>
+                                </>
+                              )}
                             </div>
-                            {isPastEvent ? (
-                              <p className="text-center text-4xl font-bold text-gray-600 dark:text-gray-400">Event Passed</p>
-                            ) : (
-                              <>
-                                <p className={`text-center text-8xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
-                                  {timeLeft.days}
-                                </p>
-                                <p className="text-center text-xl text-gray-600 dark:text-gray-400 mt-2">Days Left</p>
-                                <div className="mt-4 text-center text-gray-600 dark:text-gray-400 text-lg">
-                                  {`${timeLeft.hours.toString().padStart(2, '0')}:${timeLeft.minutes.toString().padStart(2, '0')}:${timeLeft.seconds.toString().padStart(2, '0')}`}
-                                </div>
-                              </>
-                            )}
-                            <div className="mt-4 flex justify-center space-x-2">
-                              <button onClick={() => openModal(event)} className="text-blue-500 hover:text-blue-600">
+                            <div className="flex justify-center space-x-2 mt-4">
+                              <button onClick={() => openModal(event)} className="text-gray-500 dark:text-gray-400">
                                 <FaEdit size={20} />
                               </button>
-                              <button onClick={() => deleteEvent(event.id)} className="text-red-500 hover:text-red-600">
+                              <button onClick={() => deleteEvent(event.id)} className="text-gray-500 dark:text-gray-400">
                                 <FaTrash size={20} />
                               </button>
-                              <button onClick={() => shareEvent(event)} className="text-green-500 hover:text-green-600">
+                              <button onClick={() => shareEvent(event)} className="text-gray-500 dark:text-gray-400">
                                 <FaShare size={20} />
                               </button>
                             </div>
@@ -293,7 +331,7 @@ export default function Countdown() {
         )}
       </main>
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               {editingEvent ? 'Edit Event' : 'Add New Event'}
@@ -322,7 +360,8 @@ export default function Countdown() {
                   onChange={(date) => setNewEvent(prev => ({ ...prev, date }))}
                   className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                   dateFormat="MMMM d, yyyy"
-                  popperClassName="react-datepicker-popper"
+                  minDate={startOfDay(new Date())}
+                  popperPlacement="bottom-start"
                   popperModifiers={[
                     {
                       name: 'offset',
