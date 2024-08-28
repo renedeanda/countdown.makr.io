@@ -149,7 +149,7 @@ export default function Countdown() {
           // Draw the image
           ctx.drawImage(img, 0, 0, img.width, img.height);
 
-          ctx.font = '20px Arial';
+          ctx.font = '20px Lato';
           ctx.fillStyle = isDarkMode ? '#FFFFFF' : '#000000';
           ctx.textAlign = 'center';
           ctx.fillText('Made with countdown.makr.io 🎉', canvas.width / 2, canvas.height - 20);
@@ -363,6 +363,22 @@ export default function Countdown() {
                     className="rounded-lg"
                   />
                 </div>
+                <div className="flex justify-center">
+                  <DayPicker
+                    mode="single"
+                    selected={new Date(newEvent.date)}
+                    onSelect={(date) => setNewEvent((prev) => ({ ...prev, date }))}
+                    modifiers={{ disabled: { before: new Date() } }}
+                    className={`rounded-lg transition-all duration-300 ${
+                      isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800'
+                    }`}
+                    modifiersClassNames={{
+                      selected: `bg-blue-500 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
+                      today: `bg-green-500 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
+                      disabled: `bg-gray-600 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`,
+                    }}
+                  />
+              </div>
               </div>
               <div>
                 <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
