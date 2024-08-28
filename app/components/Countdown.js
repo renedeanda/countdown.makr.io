@@ -300,7 +300,7 @@ export default function Countdown() {
                                 <p className="text-center text-2xl sm:text-4xl font-bold text-gray-600 dark:text-gray-400">Event Passed</p>
                               ) : (
                                 <>
-                                  <p className={`text-center text-6xl sm:text-9xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
+                                  <p className={`text-center text-9xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
                                     {timeLeft.days}
                                   </p>
                                   <p className="text-center text-lg sm:text-xl text-gray-600 dark:text-gray-400 mt-2">Days Left</p>
