@@ -366,7 +366,7 @@ export default function Countdown() {
                     modifiersClassNames={{
                       selected: `bg-blue-500 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
                       today: `bg-purple-400 ${isDarkMode ? 'text-gray-900' : 'text-white'}`,
-                      disabled: `bg-gray-600 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`,
+                      disabled: `bg-gray-400 ${isDarkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'}`
                     }}
                   />
               </div>
