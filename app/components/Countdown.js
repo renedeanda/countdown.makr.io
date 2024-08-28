@@ -9,8 +9,8 @@ import axios from 'axios';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import ReactGA from 'react-ga4';
 import Confetti from 'react-confetti';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 
 ReactGA.initialize('YOUR_GA_MEASUREMENT_ID');
 
@@ -131,29 +131,29 @@ export default function Countdown() {
           width: element.clientWidth, // Ensure width and height are equal
           height: element.clientWidth, // Use width for both to maintain square
         });
-  
+
         const img = new Image();
         img.src = dataUrl;
         img.onload = () => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d', { alpha: true });
-  
+
           // Ensure canvas is square
           canvas.width = img.width;
           canvas.height = img.width; // Height equal to width for square
-  
+
           // Draw background
           ctx.fillStyle = isDarkMode ? '#1F2937' : '#FFFFFF';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
+
           // Draw the image
           ctx.drawImage(img, 0, 0, img.width, img.height);
-  
+
           ctx.font = '20px Arial';
           ctx.fillStyle = isDarkMode ? '#FFFFFF' : '#000000';
           ctx.textAlign = 'center';
           ctx.fillText('Made with countdown.makr.io 🎉', canvas.width / 2, canvas.height - 20);
-  
+
           canvas.toBlob((blob) => {
             saveAs(blob, `${event.name}-countdown.png`, { quality: 0.92 });
           }, 'image/png');
@@ -161,7 +161,7 @@ export default function Countdown() {
       } catch (error) {
         console.error('Error generating image:', error);
       }
-  
+
       ReactGA.event({
         category: 'User',
         action: 'Shared Event',
@@ -224,11 +224,11 @@ export default function Countdown() {
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-100'} transition-colors duration-300`}>
       <header className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-white">Event Countdown</h1>
-          <div className="flex items-center space-x-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Event Countdown</h1>
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={celebrate}
-              className="bg-white text-purple-600 font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 hover:bg-purple-100"
+              className="bg-white text-purple-600 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105 hover:bg-purple-100"
             >
               Celebrate!
             </button>
@@ -243,16 +243,16 @@ export default function Countdown() {
       </header>
       {isCelebrating && <Confetti />}
       <main className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
           <button
             onClick={sortEvents}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+            className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
           >
             Sort by Date ({sortOrder === 'ascending' ? 'Earliest First' : 'Latest First'})
           </button>
           <button
             onClick={() => openModal()}
-            className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
             Add New Event
           </button>
@@ -273,7 +273,7 @@ export default function Countdown() {
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="events">
               {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {events.map((event, index) => {
                     const IconComponent = icons[event.type];
                     const timeLeft = calculateTimeLeft(event.date);
@@ -289,21 +289,21 @@ export default function Countdown() {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               id={`event-${event.id}`}
-                              className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 transition-transform duration-300 ease-in-out transform hover:scale-105 ${isEventToday ? 'ring-4 ring-yellow-400' : ''} flex flex-col items-center justify-center aspect-square`}
+                              className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 transition-transform duration-300 ease-in-out transform hover:scale-105 ${isEventToday ? 'ring-4 ring-yellow-400' : ''} flex flex-col items-center justify-center aspect-square`}
                             >
                               {isEventToday && <Confetti />}
                               <div className="flex flex-col items-center mb-4">
-                                {IconComponent && <IconComponent className={'text-5xl mb-2 ${gradientClass} text-gray-400 dark:text-white'} />}
-                                <h2 className="text-2xl font-semibold text-center mb-2 text-gray-800 dark:text-white">{event.name}</h2>
+                                {IconComponent && <IconComponent className={`text-5xl mb-2 ${gradientClass} text-gray-400 dark:text-white`} />}
+                                <h2 className="text-xl sm:text-2xl font-semibold text-center mb-2 text-gray-800 dark:text-white">{event.name}</h2>
                               </div>
                               {isPastEvent ? (
-                                <p className="text-center text-4xl font-bold text-gray-600 dark:text-gray-400">Event Passed</p>
+                                <p className="text-center text-2xl sm:text-4xl font-bold text-gray-600 dark:text-gray-400">Event Passed</p>
                               ) : (
                                 <>
-                                  <p className={`text-center text-9xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
+                                  <p className={`text-center text-6xl sm:text-9xl font-bold bg-gradient-to-r ${gradientClass} text-transparent bg-clip-text`}>
                                     {timeLeft.days}
                                   </p>
-                                  <p className="text-center text-xl text-gray-600 dark:text-gray-400 mt-2">Days Left</p>
+                                  <p className="text-center text-lg sm:text-xl text-gray-600 dark:text-gray-400 mt-2">Days Left</p>
                                 </>
                               )}
                             </div>
@@ -354,22 +354,11 @@ export default function Countdown() {
                 <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Event Date
                 </label>
-                <DatePicker
-                  id="eventDate"
+                <DayPicker
+                  mode="single"
                   selected={new Date(newEvent.date)}
-                  onChange={(date) => setNewEvent(prev => ({ ...prev, date }))}
-                  className="w-full p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                  dateFormat="MMMM d, yyyy"
-                  minDate={startOfDay(new Date())}
-                  popperPlacement="bottom-start"
-                  popperModifiers={[
-                    {
-                      name: 'offset',
-                      options: {
-                        offset: [0, 8]
-                      }
-                    }
-                  ]}
+                  onSelect={(date) => setNewEvent(prev => ({ ...prev, date }))}
+                  modifiers={{ disabled: { before: new Date() } }}
                 />
               </div>
               <div>

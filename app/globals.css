@@ -48,5 +48,10 @@ body {
 }
 
 .react-datepicker-popper {
-  z-index: 10;
+  z-index: 1060 !important; /* Force higher z-index for the datepicker */
 }
+
+.modal-container {
+  z-index: 1050 !important; /* Ensure modal is behind the datepicker */
+}
+
